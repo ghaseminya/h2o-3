@@ -50,8 +50,9 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
   static NumberFormat lambdaFormatter = new DecimalFormat(".##E0");
   static NumberFormat devFormatter = new DecimalFormat(".##");
 
-  public static final int SCORING_INTERVAL_MSEC = 15000; // scoreAndUpdateModel every minute unless socre every iteration is set
+  public static final int SCORING_INTERVAL_MSEC = 15000; // scoreAndUpdateModel every minute unless score every iteration is set
   public String _generatedWeights = null;
+  public int COD_ITERATION = 1; // number of times to loop through COD. Not sure about the value of setting it >1
 
   public GLM(boolean startup_once){super(new GLMParameters(),startup_once);}
   public GLM(GLMModel.GLMParameters parms) {
@@ -757,7 +758,7 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
       boolean firstIter = true;
       int iterCnt = 0;
       try {
-        while (true) {
+        while (true) { // will exit this loop when no improvements/changes detected in obj or gradient
           iterCnt++;
           long t1 = System.currentTimeMillis();
           ComputationState.GramXY gram = _state.computeGram(betaCnd,s);
@@ -1439,11 +1440,12 @@ public class GLM extends ModelBuilder<GLMModel,GLMParameters,GLMOutput> {
     // CD loop
     long t2 = System.currentTimeMillis();
 //    // CD loop
-    while (iter1++ < Math.max(P,500)) {
+//    while (iter1++ < Math.max(P,500)) { // not sure why we want it to exceed 1
+    while (iter1++ < COD_ITERATION) {
       double maxDiff = 0;
       for (int i = 0; i < activeData._cats; ++i) {
         for(int j = activeData._catOffsets[i]; j < activeData._catOffsets[i+1]; ++j) { // can do in parallel
-          double b = bc.applyBounds(ADMM.shrinkage(grads[j], l1pen) * diagInv[j],j);
+          double b = bc.applyBounds(ADMM.shrinkage(grads[j], l1pen) * diagInv[j],j); // new beta value here
           double bd = beta[j] - b;
           if(bd != 0) {
             double diff = bd*bd*xx[j][j];

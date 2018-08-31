@@ -641,7 +641,7 @@ public final class ComputationState {
       res = new ComputationState.GramXY(gt._gram,ArrayUtils.removeIds(gt._xy, zeros),null,gt._beta == null?null:ArrayUtils.removeIds(gt._beta, zeros),activeData().activeCols(),null,gt._yy,gt._likelihood);
     } else res = new GramXY(gt._gram,gt._xy,null,beta == null?null:beta,activeCols,null,gt._yy,gt._likelihood);
     if(s == GLMParameters.Solver.COORDINATE_DESCENT) {
-      res.gram.getXX();
+      res.gram.getXX();  // todo: this seems redundant, check to see if it can be safely removed.
     }
     return res;
   }
